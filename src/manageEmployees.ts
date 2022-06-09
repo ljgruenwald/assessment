@@ -1,10 +1,12 @@
-class TreeNode {
+import { getBoss, getSubordinates, getEmployeeByName } from './getEmployees'
+
+export class TreeNode {
     name: string;
     jobTitle: string;
     boss: TreeNode;
     salary: number;
     descendants: TreeNode[];
-    constructor(name = null, jobTitle = null, boss = null, salary = null) {
+    constructor(name: string, jobTitle: string, boss: TreeNode, salary: number) {
         this.name = name;
         this.jobTitle = jobTitle;
         this.boss = boss;
@@ -13,24 +15,38 @@ class TreeNode {
     }
 }
 
+export type Employee = {
+    name: string;
+    jobTitle: string;
+    boss: TreeNode;
+    salary: string;
+}
+
+type employeeJson = {
+    name: string;
+    jobTitle: string;
+    boss: string;
+    salary: string;
+}
+
 /**
  * Normalizes the provided JSON file and generates a tree of employees.
  *
  * @param {Object[]} employees array of employees
  * @returns {TreeNode}
  */
-function generateCompanyStructure(employees: Object[]): TreeNode {
+function generateCompanyStructure(employees: employeeJson[]): TreeNode {
     // hire everyone using the array of employee objects
 
     // find the ceo and start the tree with them
-    const ceo = employees.find((employee: object) => employee.jobTitle === "CEO");
+    const ceo = employees.find((employee: employeeJson) => employee.jobTitle === "CEO");
     const root = new TreeNode(ceo.name, ceo.jobTitle, null, parseInt(ceo.salary));
 
     console.log("Generating employee tree...");
 
     // hire the plebs
-    employees.slice(1).forEach((pleb: Object) => {
-        hireEmployee(root, pleb, pleb.boss.name)
+    employees.slice(1).forEach((pleb: employeeJson) => {
+        hireEmployee(root, pleb, pleb.boss)
     });
 
     return root;
@@ -44,18 +60,19 @@ function generateCompanyStructure(employees: Object[]): TreeNode {
  * @param {string} bossName
  * @returns {void}
  */
-function hireEmployee(tree: TreeNode, newEmployee: Object, bossName: string): void {
-    if (newEmployee.name.includes("@")){
-        // this makes assumptions, but it works for given input
+function hireEmployee(tree: TreeNode, newEmployee: employeeJson, bossName: string): void {
+    if (newEmployee.name.includes("@") && newEmployee.name.includes(".")){
+        // if we assume email is the only other invalid input type
+        // and we assume the first half of email is their name...
         newEmployee = fixName(newEmployee);
     };
 
-    const bossNode = null//  !! Add function here to find the boss node !!
+    let bossNode = getBoss(tree, newEmployee.name)
 
     const newEmployeeNode = new TreeNode(
         newEmployee.name, 
         newEmployee.jobTitle,
-        newEmployee.boss,
+        bossNode,
         parseInt(newEmployee.salary),
     );
 
@@ -66,7 +83,7 @@ function hireEmployee(tree: TreeNode, newEmployee: Object, bossName: string): vo
     with ${bossName} as their boss`);
 }
 
-function fixName(newEmployee: Object): Object{
+function fixName(newEmployee: employeeJson): employeeJson{
     let invalidName = newEmployee.name;
     let front = invalidName.split("@")[0];
     const capitalized = front[0].toUpperCase() + front.slice(1);
@@ -84,10 +101,17 @@ function fixName(newEmployee: Object): Object{
 function fireEmployee(tree: TreeNode, name: string): void {
 
     // find your employee node to remove 
-    // const slacker = findEmployeeNode() 
+    const slacker = getEmployeeByName(tree, name); 
 
     // if employee has subordinates, promote a random one while firing slacker
     // else just remove the employee 
+    let subordinates = getSubordinates(tree, name);
+    if (subordinates.length > 0){
+        // promote a subordinate and adjust their data as needed
+        // overwrite the fired boss
+    } else {
+        // if no subordinates, just delete the node;
+    }
 
     // console.log your action
 }
@@ -102,12 +126,14 @@ function fireEmployee(tree: TreeNode, name: string): void {
  */
 function promoteEmployee(tree: TreeNode, employeeName: string): void {
     // first find your employee node to promote
-    // const highPerformer = findEmployeeNode()
+    const highPerformer = getEmployeeByName(tree, employeeName);
 
     // find their boss to demote 
-    // const lowPerformer = highPerformer.boss
+    const lowPerformer = highPerformer.boss
 
-    // swap them and console.log it
+    // swap the two nodes, adjusting their data as needed
+
+    // console.log it
 }
 
 /**
@@ -121,10 +147,20 @@ function promoteEmployee(tree: TreeNode, employeeName: string): void {
  */
 function demoteEmployee(tree: TreeNode, employeeName: string, subordinateName: string): void {
     // similar to promotion, we are swapping two nodes 
-    // find your employee to demote
-    // const lowPerformer = findEmployeeNode()
-    // find your subordinate to promote
-    // const highPerformer = findEmployeeNode()
+    const lowPerformer = getEmployeeByName(tree, employeeName);
 
-    // swap the two nodes and console.log it 
+    // need to have a subordinate available to make it possible to demote
+    if (lowPerformer.descendants.length > 0){
+        
+        let highPerformer = lowPerformer.descendants[0]
+
+        // swap the two nodes, adjust their data as needed
+
+    } else {
+        console.log("no further demotions possible")
+
+        // maybe fire them in this scenario?
+    }
+
+    // console.log it 
 }
