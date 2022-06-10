@@ -1,6 +1,6 @@
 "use strict";
 exports.__esModule = true;
-exports.generateCompanyStructure = exports.TreeNode = void 0;
+exports.demoteEmployee = exports.promoteEmployee = exports.fireEmployee = exports.hireEmployee = exports.generateCompanyStructure = exports.TreeNode = void 0;
 var getEmployees_1 = require("./getEmployees");
 var TreeNode = /** @class */ (function () {
     function TreeNode(name, jobTitle, boss, salary) {
@@ -52,10 +52,10 @@ function hireEmployee(tree, newEmployee, bossName) {
     var newEmployeeNode = new TreeNode(newEmployee.name, newEmployee.jobTitle, bossNode, parseInt(newEmployee.salary));
     if (bossNode) {
         bossNode.descendants.push(newEmployeeNode);
-        console.log("pushed into descendants");
     }
     console.log("[hireEmployee]: Added new employee (".concat(newEmployee.name, ") \n    with ").concat(bossName, " as their boss"));
 }
+exports.hireEmployee = hireEmployee;
 function fixName(newEmployee) {
     var invalidName = newEmployee.name;
     var front = invalidName.split("@")[0];
@@ -97,6 +97,7 @@ function fireEmployee(tree, name) {
         }
     }
 }
+exports.fireEmployee = fireEmployee;
 /**
  * Promotes an employee one level above their current ranking.
  * The promoted employee and their boss should swap places in the hierarchy.
@@ -110,15 +111,14 @@ function promoteEmployee(tree, employeeName) {
     var promoteMe = (0, getEmployees_1.getEmployeeByName)(tree, employeeName);
     var promotedDescendants = promoteMe.descendants;
     var demoteMe = promoteMe.boss;
-    console.log("promote: ".concat(promoteMe.name));
-    console.log("demote: ".concat(demoteMe.name));
     var demotedDescendants = demoteMe.descendants;
     var nodeAbove = demoteMe.boss;
-    nodeAbove.descendants.push(promoteMe);
-    console.log(nodeAbove.descendants);
-    var index = nodeAbove.descendants.indexOf(demoteMe);
-    if (index > -1) {
-        nodeAbove.descendants.splice(index, 1);
+    if (nodeAbove) {
+        nodeAbove.descendants.push(promoteMe);
+        var index = nodeAbove.descendants.indexOf(demoteMe);
+        if (index > -1) {
+            nodeAbove.descendants.splice(index, 1);
+        }
     }
     promoteMe.descendants = demotedDescendants;
     promoteMe.descendants.push(demoteMe);
@@ -138,8 +138,18 @@ function promoteEmployee(tree, employeeName) {
     }
     // assign boss to promoted employee
     promoteMe.boss = nodeAbove;
+    demoteMe.boss = promoteMe;
+    // swap job title
+    var tempJob = promoteMe.jobTitle;
+    promoteMe.jobTitle = demoteMe.jobTitle;
+    demoteMe.jobTitle = tempJob;
+    // swap salary
+    var tempSalary = promoteMe.salary;
+    promoteMe.salary = demoteMe.salary;
+    demoteMe.salary = tempSalary;
     console.log("[promoteEmployee]: Promoted ".concat(promoteMe.name, " and made ").concat(demoteMe.name, " their subordinate"));
 }
+exports.promoteEmployee = promoteEmployee;
 /**
  * Demotes an employee one level below their current ranking.
  * Picks a subordinat and swaps places in the hierarchy.
@@ -151,39 +161,56 @@ function promoteEmployee(tree, employeeName) {
  */
 function demoteEmployee(tree, employeeName, subordinateName) {
     // similar to promotion, we are swapping two nodes 
-    var lowPerformer = (0, getEmployees_1.getEmployeeByName)(tree, employeeName);
-    var highPerformer = (0, getEmployees_1.getEmployeeByName)(tree, subordinateName);
+    var demoteMe = (0, getEmployees_1.getEmployeeByName)(tree, employeeName);
+    var promoteMe = (0, getEmployees_1.getEmployeeByName)(tree, subordinateName);
     // need to have a subordinate available to make it possible to demote
-    if (lowPerformer.descendants.length > 0) {
-        var highDescendants = highPerformer.descendants;
-        var lowDescendants = lowPerformer.descendants;
-        var nodeAbove = lowPerformer.boss;
-        nodeAbove.descendants.push(highPerformer);
-        var index = nodeAbove.descendants.indexOf(lowPerformer);
-        if (index > -1) {
-            nodeAbove.descendants.splice(index, 1);
+    if (demoteMe.descendants.length) {
+        var promotedDescendants = promoteMe.descendants;
+        var demotedDescendants = demoteMe.descendants;
+        if (demoteMe.boss) {
+            var nodeAbove = demoteMe.boss;
+            nodeAbove.descendants.push(promoteMe);
+            var index = nodeAbove.descendants.indexOf(demoteMe);
+            if (index > -1) {
+                nodeAbove.descendants.splice(index, 1);
+            }
         }
-        highPerformer.descendants = lowDescendants;
-        index = highPerformer.descendants.indexOf(highPerformer);
+        promoteMe.descendants = demotedDescendants;
+        promoteMe.descendants.push(demoteMe);
+        index = promoteMe.descendants.indexOf(promoteMe);
         if (index > -1) {
-            highPerformer.descendants.splice(index, 1);
+            promoteMe.descendants.splice(index, 1);
         }
-        lowPerformer.descendants = highDescendants;
-        index = lowPerformer.descendants.indexOf(lowPerformer);
+        // inform everyone of their new boss
+        for (var _i = 0, _a = promoteMe.descendants; _i < _a.length; _i++) {
+            var child = _a[_i];
+            child.boss = promoteMe;
+        }
+        demoteMe.descendants = promotedDescendants;
+        index = demoteMe.descendants.indexOf(demoteMe);
         if (index > -1) {
-            lowPerformer.descendants.splice(index, 1);
+            demoteMe.descendants.splice(index, 1);
         }
         // assign boss
-        highPerformer.boss = nodeAbove;
-        lowPerformer.boss = highPerformer;
+        promoteMe.boss = nodeAbove;
+        demoteMe.boss = promoteMe;
+        // swap job title
+        var tempJob = promoteMe.jobTitle;
+        promoteMe.jobTitle = demoteMe.jobTitle;
+        demoteMe.jobTitle = tempJob;
+        // swap salary
+        var tempSalary = promoteMe.salary;
+        promoteMe.salary = demoteMe.salary;
+        demoteMe.salary = tempSalary;
     }
     else {
         console.log("no further demotions possible");
         // maybe fire them in this scenario?
     }
-    console.log("[demoteEmployee]: Demoted employee (demoted ".concat(lowPerformer, " and replaced with ").concat(highPerformer, ")"));
+    console.log("[demoteEmployee]: Demoted employee (demoted ".concat(demoteMe.name, " and replaced with ").concat(promoteMe.name, ")"));
 }
-var testArray = [
+exports.demoteEmployee = demoteEmployee;
+var employees = [
     {
         "name": "Sarah",
         "jobTitle": "CEO",
@@ -251,9 +278,20 @@ var testArray = [
         "salary": "60000"
     }
 ];
-var treeTest = generateCompanyStructure(testArray);
-promoteEmployee(treeTest, "Nick");
-var findNick = (0, getEmployees_1.getEmployeeByName)(treeTest, "Nick");
-var findBill = (0, getEmployees_1.getEmployeeByName)(treeTest, "Bill");
-console.log(findNick);
-console.log(findBill);
+var jebNode = {
+    "name": "Jeb",
+    "jobTitle": "Florida Governor",
+    "boss": "Alicia",
+    "salary": "150000"
+};
+var tree = generateCompanyStructure(employees);
+console.log('.');
+console.log("--- INITIAL TREE NOW FULLY GENERATED ---");
+console.log('.');
+hireEmployee(tree, jebNode, "Sarah");
+fireEmployee(tree, "Alicia");
+promoteEmployee(tree, "Jared");
+demoteEmployee(tree, "Xavier", "Maria");
+(0, getEmployees_1.getBoss)(tree, "Bill", "Jared");
+(0, getEmployees_1.getSubordinates)(tree, "Jeb");
+// console.log(getEmployeeByName(tree, "Jeb"))

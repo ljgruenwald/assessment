@@ -24,6 +24,7 @@ exports.getEmployeeByName = getEmployeeByName;
  *
  * @param {TreeNode} tree
  * @param {string} employeeName
+ * @param {string} bossName
  * @returns {TreeNode}
  */
 function getBoss(tree, employeeName, bossName) {
