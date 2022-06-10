@@ -60,7 +60,6 @@ export function generateCompanyStructure(employees: employeeJson[]): TreeNode {
  * @returns {void}
  */
 function hireEmployee(tree: TreeNode, newEmployee: employeeJson, bossName: string): void {
-    // console.log(newEmployee)
     if (newEmployee.name.indexOf("@") !== -1 && newEmployee.name.indexOf(".") !== -1){
         // if we assume email is the only other invalid input type
         // and we assume the first half of email is their name...
@@ -68,7 +67,6 @@ function hireEmployee(tree: TreeNode, newEmployee: employeeJson, bossName: strin
     };
     if (bossName !== null){
         var bossNode = getBoss(tree, newEmployee.name, bossName)
-        // console.log(`bossNode is ${bossNode}`)
     }
 
     const newEmployeeNode = new TreeNode(
@@ -77,17 +75,13 @@ function hireEmployee(tree: TreeNode, newEmployee: employeeJson, bossName: strin
         bossNode,
         parseInt(newEmployee.salary),
     );
-    // console.log(`boss node is ${bossNode}`)
-    // console.log("----")
-    // if they have a boss, add them to descendants 
+
     if (bossNode){
         bossNode.descendants.push(newEmployeeNode);
-        console.log("pushed into descendants")
     }
 
     console.log(`[hireEmployee]: Added new employee (${newEmployee.name}) 
     with ${bossName} as their boss`);
-    // console.log(tree)
 }
 
 function fixName(newEmployee: employeeJson): employeeJson{
@@ -145,35 +139,40 @@ function fireEmployee(tree: TreeNode, name: string): void {
  */
 function promoteEmployee(tree: TreeNode, employeeName: string): void {
     // first find your employee node to promote
-    const highPerformer = getEmployeeByName(tree, employeeName);
-    const highDescendants = highPerformer.descendants
-    const lowPerformer = highPerformer.boss
-    const lowDescendants = lowPerformer.descendants
-    const nodeAbove = lowPerformer.boss;
+    const promoteMe = getEmployeeByName(tree, employeeName);
+    const promotedDescendants = promoteMe.descendants
+    const demoteMe = promoteMe.boss
+    const demotedDescendants = demoteMe.descendants
+    const nodeAbove = demoteMe.boss;
     
-    nodeAbove.descendants.push(highPerformer);
-    let index = nodeAbove.descendants.indexOf(lowPerformer)
+    nodeAbove.descendants.push(promoteMe);
+    let index = nodeAbove.descendants.indexOf(demoteMe)
     if (index > -1) {
         nodeAbove.descendants.splice(index, 1);
     }
 
-    highPerformer.descendants = lowDescendants
-    index = highPerformer.descendants.indexOf(highPerformer)
+    promoteMe.descendants = demotedDescendants
+    promoteMe.descendants.push(demoteMe)
+    index = promoteMe.descendants.indexOf(promoteMe)
     if (index > -1) {
-        highPerformer.descendants.splice(index, 1);
+        promoteMe.descendants.splice(index, 1);
+    }
+    // inform everyone of their new boss
+    for (let child of promoteMe.descendants){
+        child.boss = promoteMe
     }
 
-    lowPerformer.descendants = highDescendants
-    index = lowPerformer.descendants.indexOf(lowPerformer)
+
+    demoteMe.descendants = promotedDescendants
+    index = demoteMe.descendants.indexOf(demoteMe)
     if (index > -1) {
-        lowPerformer.descendants.splice(index, 1);
+        demoteMe.descendants.splice(index, 1);
     }
 
-    // assign boss
-    highPerformer.boss = nodeAbove
-    lowPerformer.boss = highPerformer
+    // assign boss to promoted employee
+    promoteMe.boss = nodeAbove
 
-    console.log(`[promoteEmployee]: Promoted ${highPerformer} and made ${lowPerformer} their subordinate`);
+    console.log(`[promoteEmployee]: Promoted ${promoteMe.name} and made ${demoteMe.name} their subordinate`);
 }
 
 /**

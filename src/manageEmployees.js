@@ -40,7 +40,6 @@ exports.generateCompanyStructure = generateCompanyStructure;
  * @returns {void}
  */
 function hireEmployee(tree, newEmployee, bossName) {
-    // console.log(newEmployee)
     if (newEmployee.name.indexOf("@") !== -1 && newEmployee.name.indexOf(".") !== -1) {
         // if we assume email is the only other invalid input type
         // and we assume the first half of email is their name...
@@ -49,18 +48,13 @@ function hireEmployee(tree, newEmployee, bossName) {
     ;
     if (bossName !== null) {
         var bossNode = (0, getEmployees_1.getBoss)(tree, newEmployee.name, bossName);
-        // console.log(`bossNode is ${bossNode}`)
     }
     var newEmployeeNode = new TreeNode(newEmployee.name, newEmployee.jobTitle, bossNode, parseInt(newEmployee.salary));
-    // console.log(`boss node is ${bossNode}`)
-    // console.log("----")
-    // if they have a boss, add them to descendants 
     if (bossNode) {
         bossNode.descendants.push(newEmployeeNode);
         console.log("pushed into descendants");
     }
     console.log("[hireEmployee]: Added new employee (".concat(newEmployee.name, ") \n    with ").concat(bossName, " as their boss"));
-    // console.log(tree)
 }
 function fixName(newEmployee) {
     var invalidName = newEmployee.name;
@@ -113,30 +107,38 @@ function fireEmployee(tree, name) {
  */
 function promoteEmployee(tree, employeeName) {
     // first find your employee node to promote
-    var highPerformer = (0, getEmployees_1.getEmployeeByName)(tree, employeeName);
-    var highDescendants = highPerformer.descendants;
-    var lowPerformer = highPerformer.boss;
-    var lowDescendants = lowPerformer.descendants;
-    var nodeAbove = lowPerformer.boss;
-    nodeAbove.descendants.push(highPerformer);
-    var index = nodeAbove.descendants.indexOf(lowPerformer);
+    var promoteMe = (0, getEmployees_1.getEmployeeByName)(tree, employeeName);
+    var promotedDescendants = promoteMe.descendants;
+    var demoteMe = promoteMe.boss;
+    console.log("promote: ".concat(promoteMe.name));
+    console.log("demote: ".concat(demoteMe.name));
+    var demotedDescendants = demoteMe.descendants;
+    var nodeAbove = demoteMe.boss;
+    nodeAbove.descendants.push(promoteMe);
+    console.log(nodeAbove.descendants);
+    var index = nodeAbove.descendants.indexOf(demoteMe);
     if (index > -1) {
         nodeAbove.descendants.splice(index, 1);
     }
-    highPerformer.descendants = lowDescendants;
-    index = highPerformer.descendants.indexOf(highPerformer);
+    promoteMe.descendants = demotedDescendants;
+    promoteMe.descendants.push(demoteMe);
+    index = promoteMe.descendants.indexOf(promoteMe);
     if (index > -1) {
-        highPerformer.descendants.splice(index, 1);
+        promoteMe.descendants.splice(index, 1);
     }
-    lowPerformer.descendants = highDescendants;
-    index = lowPerformer.descendants.indexOf(lowPerformer);
+    // inform everyone of their new boss
+    for (var _i = 0, _a = promoteMe.descendants; _i < _a.length; _i++) {
+        var child = _a[_i];
+        child.boss = promoteMe;
+    }
+    demoteMe.descendants = promotedDescendants;
+    index = demoteMe.descendants.indexOf(demoteMe);
     if (index > -1) {
-        lowPerformer.descendants.splice(index, 1);
+        demoteMe.descendants.splice(index, 1);
     }
-    // assign boss
-    highPerformer.boss = nodeAbove;
-    lowPerformer.boss = highPerformer;
-    console.log("[promoteEmployee]: Promoted ".concat(highPerformer, " and made ").concat(lowPerformer, " their subordinate"));
+    // assign boss to promoted employee
+    promoteMe.boss = nodeAbove;
+    console.log("[promoteEmployee]: Promoted ".concat(promoteMe.name, " and made ").concat(demoteMe.name, " their subordinate"));
 }
 /**
  * Demotes an employee one level below their current ranking.
@@ -250,14 +252,8 @@ var testArray = [
     }
 ];
 var treeTest = generateCompanyStructure(testArray);
-console.log(treeTest);
-console.log(fireEmployee(treeTest, "Xavier"));
-console.log(fireEmployee(treeTest, "Maria"));
-console.log(fireEmployee(treeTest, "Morty"));
-console.log(fireEmployee(treeTest, "Bill"));
-console.log(fireEmployee(treeTest, "Rick"));
-console.log(fireEmployee(treeTest, "Jared"));
-console.log(fireEmployee(treeTest, "Nick"));
-console.log(fireEmployee(treeTest, "Sal"));
-console.log(fireEmployee(treeTest, "Alicia"));
-console.log(treeTest);
+promoteEmployee(treeTest, "Nick");
+var findNick = (0, getEmployees_1.getEmployeeByName)(treeTest, "Nick");
+var findBill = (0, getEmployees_1.getEmployeeByName)(treeTest, "Bill");
+console.log(findNick);
+console.log(findBill);
