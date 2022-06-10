@@ -4,6 +4,7 @@
         "resolveJsonModule": true,
         "module": "commonjs",
         "esModuleInterop": true,
+        "lib": ["es6", "dom"],
         "target": "es6",
         "noImplicitAny": true,
         "moduleResolution": "node",

@@ -1,4 +1,4 @@
-import { getBoss, getSubordinates, getEmployeeByName } from './getEmployees'
+import { getBoss, getEmployeeByName } from './getEmployees'
 
 export class TreeNode {
     name: string;
@@ -35,11 +35,10 @@ type employeeJson = {
  * @param {Object[]} employees array of employees
  * @returns {TreeNode}
  */
-function generateCompanyStructure(employees: employeeJson[]): TreeNode {
-    // hire everyone using the array of employee objects
+export function generateCompanyStructure(employees: employeeJson[]): TreeNode {
 
     // find the ceo and start the tree with them
-    const ceo = employees.find((employee: employeeJson) => employee.jobTitle === "CEO");
+    const ceo = employees.filter((employee) => employee.jobTitle === "CEO")[0];
     const root = new TreeNode(ceo.name, ceo.jobTitle, null, parseInt(ceo.salary));
 
     console.log("Generating employee tree...");
@@ -61,13 +60,16 @@ function generateCompanyStructure(employees: employeeJson[]): TreeNode {
  * @returns {void}
  */
 function hireEmployee(tree: TreeNode, newEmployee: employeeJson, bossName: string): void {
-    if (newEmployee.name.includes("@") && newEmployee.name.includes(".")){
+    // console.log(newEmployee)
+    if (newEmployee.name.indexOf("@") !== -1 && newEmployee.name.indexOf(".") !== -1){
         // if we assume email is the only other invalid input type
         // and we assume the first half of email is their name...
         newEmployee = fixName(newEmployee);
     };
-
-    let bossNode = getBoss(tree, newEmployee.name)
+    if (bossName !== null){
+        var bossNode = getBoss(tree, newEmployee.name, bossName)
+        // console.log(`bossNode is ${bossNode}`)
+    }
 
     const newEmployeeNode = new TreeNode(
         newEmployee.name, 
@@ -75,12 +77,17 @@ function hireEmployee(tree: TreeNode, newEmployee: employeeJson, bossName: strin
         bossNode,
         parseInt(newEmployee.salary),
     );
-
+    // console.log(`boss node is ${bossNode}`)
+    // console.log("----")
     // if they have a boss, add them to descendants 
-    bossNode.descendants.push(newEmployeeNode);
+    if (bossNode){
+        bossNode.descendants.push(newEmployeeNode);
+        console.log("pushed into descendants")
+    }
 
     console.log(`[hireEmployee]: Added new employee (${newEmployee.name}) 
     with ${bossName} as their boss`);
+    // console.log(tree)
 }
 
 function fixName(newEmployee: employeeJson): employeeJson{
@@ -90,6 +97,11 @@ function fixName(newEmployee: employeeJson): employeeJson{
     newEmployee.name = capitalized;
     return newEmployee;
 }
+
+// function swapNodes(moveUp: TreeNode, moveDown: TreeNode): void {
+//  possible future function to share code for various swaps
+// }
+
 /**
  * Removes an employee from the team by name.
  * If the employee has other employees below them, randomly selects one to take their place.
@@ -101,19 +113,26 @@ function fixName(newEmployee: employeeJson): employeeJson{
 function fireEmployee(tree: TreeNode, name: string): void {
 
     // find your employee node to remove 
-    const slacker = getEmployeeByName(tree, name); 
+    const fireMe = getEmployeeByName(tree, name); 
 
-    // if employee has subordinates, promote a random one while firing slacker
-    // else just remove the employee 
-    let subordinates = getSubordinates(tree, name);
-    if (subordinates.length > 0){
-        // promote a subordinate and adjust their data as needed
-        // overwrite the fired boss
+    // if employee has subordinates, promote a random one 
+    if (fireMe.descendants.length > 0){
+        const toPromote = fireMe.descendants[0]
+        const inherited = fireMe.descendants.slice(1);
+        fireMe.boss.descendants.push(toPromote);
+        toPromote.descendants.concat(inherited);
+        toPromote.boss = fireMe.boss;
+        const index = fireMe.boss.descendants.indexOf(fireMe);
+        if (index > -1) {
+            fireMe.boss.descendants.splice(index, 1);
+        }
+        console.log(`[fireEmployee]: Fired ${fireMe} and replaced with ${toPromote.name}`);
     } else {
-        // if no subordinates, just delete the node;
+        const index = fireMe.boss.descendants.indexOf(fireMe);
+        if (index > -1) {
+            fireMe.boss.descendants.splice(index, 1);
+        }
     }
-
-    // console.log your action
 }
 
 /**
@@ -127,13 +146,34 @@ function fireEmployee(tree: TreeNode, name: string): void {
 function promoteEmployee(tree: TreeNode, employeeName: string): void {
     // first find your employee node to promote
     const highPerformer = getEmployeeByName(tree, employeeName);
-
-    // find their boss to demote 
+    const highDescendants = highPerformer.descendants
     const lowPerformer = highPerformer.boss
+    const lowDescendants = lowPerformer.descendants
+    const nodeAbove = lowPerformer.boss;
+    
+    nodeAbove.descendants.push(highPerformer);
+    let index = nodeAbove.descendants.indexOf(lowPerformer)
+    if (index > -1) {
+        nodeAbove.descendants.splice(index, 1);
+    }
 
-    // swap the two nodes, adjusting their data as needed
+    highPerformer.descendants = lowDescendants
+    index = highPerformer.descendants.indexOf(highPerformer)
+    if (index > -1) {
+        highPerformer.descendants.splice(index, 1);
+    }
 
-    // console.log it
+    lowPerformer.descendants = highDescendants
+    index = lowPerformer.descendants.indexOf(lowPerformer)
+    if (index > -1) {
+        lowPerformer.descendants.splice(index, 1);
+    }
+
+    // assign boss
+    highPerformer.boss = nodeAbove
+    lowPerformer.boss = highPerformer
+
+    console.log(`[promoteEmployee]: Promoted ${highPerformer} and made ${lowPerformer} their subordinate`);
 }
 
 /**
@@ -148,19 +188,41 @@ function promoteEmployee(tree: TreeNode, employeeName: string): void {
 function demoteEmployee(tree: TreeNode, employeeName: string, subordinateName: string): void {
     // similar to promotion, we are swapping two nodes 
     const lowPerformer = getEmployeeByName(tree, employeeName);
+    const highPerformer = getEmployeeByName(tree, subordinateName);
 
     // need to have a subordinate available to make it possible to demote
     if (lowPerformer.descendants.length > 0){
         
-        let highPerformer = lowPerformer.descendants[0]
+        const highDescendants = highPerformer.descendants
+        const lowDescendants = lowPerformer.descendants
+        const nodeAbove = lowPerformer.boss;
 
-        // swap the two nodes, adjust their data as needed
+        nodeAbove.descendants.push(highPerformer);
+        let index = nodeAbove.descendants.indexOf(lowPerformer)
+        if (index > -1) {
+            nodeAbove.descendants.splice(index, 1);
+        }
+
+        highPerformer.descendants = lowDescendants
+        index = highPerformer.descendants.indexOf(highPerformer)
+        if (index > -1) {
+            highPerformer.descendants.splice(index, 1);
+        }
+
+        lowPerformer.descendants = highDescendants
+        index = lowPerformer.descendants.indexOf(lowPerformer)
+        if (index > -1) {
+            lowPerformer.descendants.splice(index, 1);
+        }
+
+        // assign boss
+        highPerformer.boss = nodeAbove
+        lowPerformer.boss = highPerformer
 
     } else {
         console.log("no further demotions possible")
-
         // maybe fire them in this scenario?
     }
 
-    // console.log it 
+    console.log(`[demoteEmployee]: Demoted employee (demoted ${lowPerformer} and replaced with ${highPerformer})`);
 }

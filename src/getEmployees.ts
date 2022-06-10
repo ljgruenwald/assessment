@@ -23,9 +23,13 @@ export function getEmployeeByName(node: TreeNode, nameWanted: string): TreeNode{
  * @param {string} employeeName
  * @returns {TreeNode}
  */
-export function getBoss(tree: TreeNode, employeeName: string): TreeNode {
-    let employeeNode = getEmployeeByName(tree, employeeName);
-    let bossNode = employeeNode.boss;
+export function getBoss(tree: TreeNode, employeeName: string, bossName: string): TreeNode {
+    let bossNode = getEmployeeByName(tree, bossName);
+    if (bossNode){
+        console.log(`[getBoss]: ${employeeName}'s boss is ${bossNode.name}`);
+    } else {
+        console.log(`[getBoss]: ${employeeName} does not have a boss`);
+    }
     return bossNode;
 }
 
@@ -40,6 +44,7 @@ export function getBoss(tree: TreeNode, employeeName: string): TreeNode {
 export function getSubordinates(tree: TreeNode, employeeName: string): TreeNode[] {
     let employeeNode = getEmployeeByName(tree, employeeName);
     if (employeeNode.descendants.length > 0){
+        console.log(`[getSubordinate]: ${employeeName}'s subordinates are ${employeeNode.descendants}`);
         return employeeNode.descendants
     } else {
         console.log("no subordinates")
