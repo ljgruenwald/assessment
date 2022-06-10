@@ -120,13 +120,13 @@ function fireEmployee(tree: TreeNode, name: string): void {
         const toPromote = fireMe.descendants[0]
         const inherited = fireMe.descendants.slice(1);
         fireMe.boss.descendants.push(toPromote);
-        toPromote.descendants.concat(inherited);
+        toPromote.descendants = toPromote.descendants.concat(inherited);
         toPromote.boss = fireMe.boss;
         const index = fireMe.boss.descendants.indexOf(fireMe);
         if (index > -1) {
             fireMe.boss.descendants.splice(index, 1);
         }
-        console.log(`[fireEmployee]: Fired ${fireMe} and replaced with ${toPromote.name}`);
+        console.log(`[fireEmployee]: Fired ${fireMe.name} and replaced with ${toPromote.name}`);
     } else {
         const index = fireMe.boss.descendants.indexOf(fireMe);
         if (index > -1) {

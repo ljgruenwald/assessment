@@ -49,15 +49,18 @@ function hireEmployee(tree, newEmployee, bossName) {
     ;
     if (bossName !== null) {
         var bossNode = (0, getEmployees_1.getBoss)(tree, newEmployee.name, bossName);
+        // console.log(`bossNode is ${bossNode}`)
     }
     var newEmployeeNode = new TreeNode(newEmployee.name, newEmployee.jobTitle, bossNode, parseInt(newEmployee.salary));
-
+    // console.log(`boss node is ${bossNode}`)
+    // console.log("----")
     // if they have a boss, add them to descendants 
     if (bossNode) {
         bossNode.descendants.push(newEmployeeNode);
+        console.log("pushed into descendants");
     }
     console.log("[hireEmployee]: Added new employee (".concat(newEmployee.name, ") \n    with ").concat(bossName, " as their boss"));
-
+    // console.log(tree)
 }
 function fixName(newEmployee) {
     var invalidName = newEmployee.name;
@@ -85,13 +88,13 @@ function fireEmployee(tree, name) {
         var toPromote = fireMe.descendants[0];
         var inherited = fireMe.descendants.slice(1);
         fireMe.boss.descendants.push(toPromote);
-        toPromote.descendants.concat(inherited);
+        toPromote.descendants = toPromote.descendants.concat(inherited);
         toPromote.boss = fireMe.boss;
         var index = fireMe.boss.descendants.indexOf(fireMe);
         if (index > -1) {
             fireMe.boss.descendants.splice(index, 1);
         }
-        console.log("[fireEmployee]: Fired ".concat(fireMe, " and replaced with ").concat(toPromote.name));
+        console.log("[fireEmployee]: Fired ".concat(fireMe.name, " and replaced with ").concat(toPromote.name));
     }
     else {
         var index = fireMe.boss.descendants.indexOf(fireMe);
@@ -178,7 +181,7 @@ function demoteEmployee(tree, employeeName, subordinateName) {
     }
     console.log("[demoteEmployee]: Demoted employee (demoted ".concat(lowPerformer, " and replaced with ").concat(highPerformer, ")"));
 }
-var arrayone = [
+var testArray = [
     {
         "name": "Sarah",
         "jobTitle": "CEO",
@@ -246,4 +249,15 @@ var arrayone = [
         "salary": "60000"
     }
 ];
-console.log(generateCompanyStructure(arrayone));
+var treeTest = generateCompanyStructure(testArray);
+console.log(treeTest);
+console.log(fireEmployee(treeTest, "Xavier"));
+console.log(fireEmployee(treeTest, "Maria"));
+console.log(fireEmployee(treeTest, "Morty"));
+console.log(fireEmployee(treeTest, "Bill"));
+console.log(fireEmployee(treeTest, "Rick"));
+console.log(fireEmployee(treeTest, "Jared"));
+console.log(fireEmployee(treeTest, "Nick"));
+console.log(fireEmployee(treeTest, "Sal"));
+console.log(fireEmployee(treeTest, "Alicia"));
+console.log(treeTest);
