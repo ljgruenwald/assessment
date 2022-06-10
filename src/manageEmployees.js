@@ -281,7 +281,7 @@ var employees = [
 var jebNode = {
     "name": "Jeb",
     "jobTitle": "Florida Governor",
-    "boss": "Alicia",
+    "boss": "Sarah",
     "salary": "150000"
 };
 var tree = generateCompanyStructure(employees);

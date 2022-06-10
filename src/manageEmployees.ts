@@ -328,7 +328,7 @@ let employees = [
 let jebNode = {
     "name": "Jeb",
     "jobTitle": "Florida Governor",
-    "boss": "Alicia",
+    "boss": "Sarah",
     "salary": "150000"
 }
 
@@ -343,4 +343,5 @@ demoteEmployee(tree, "Xavier", "Maria")
 
 getBoss(tree, "Bill", "Jared")
 getSubordinates(tree, "Jeb")
-// console.log(getEmployeeByName(tree, "Jeb"))
+
+

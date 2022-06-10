@@ -48,8 +48,11 @@ exports.getBoss = getBoss;
  */
 function getSubordinates(tree, employeeName) {
     var employeeNode = getEmployeeByName(tree, employeeName);
-    if (employeeNode.descendants.length > 0) {
-        console.log("[getSubordinate]: ".concat(employeeName, "'s subordinates are ").concat(employeeNode.descendants));
+    var bossNode = getEmployeeByName(tree, employeeNode.boss.name);
+    if (bossNode.descendants.length > 0) {
+        var filtered = bossNode.descendants.filter(function (node) { return node !== employeeNode; });
+        var filteredNames = filtered.map(function (node) { return " " + node.name; });
+        console.log("[getSubordinate]: ".concat(employeeName, "'s subordinates are ").concat(filteredNames));
         return employeeNode.descendants;
     }
     else {
