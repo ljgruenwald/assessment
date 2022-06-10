@@ -9,6 +9,6 @@
     },
     "scripts": {
         "build": "tsc --build",
-        "start": "yarn build && node dist/index.js"
+        "start": "yarn build && node src/manageEmployees.js"
     }
 }
